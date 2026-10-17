@@ -1,0 +1,6 @@
+{
+  "name": "The Mood Menu — A Café That Serves Your Mood",
+  "description": "An immersive luxury specialty café where drink discovery begins with how you feel. Features interactive 3D drink experiences, personalized mood recommendations, and online ordering.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
