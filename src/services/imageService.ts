@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import React from 'react';
 import { Product } from '../types/cafe';
 
 // Pre-generated Studio Imagery assets created via the Image Generation tool
@@ -37,6 +38,8 @@ export {
 
 export interface StudioImageMetadata {
   src: string;
+  fallbackSrc: string;
+  staticPath: string;
   alt: string;
   cameraAngle: string;
   lightingSetup: string;
@@ -52,9 +55,33 @@ export interface FetchImageOptions {
   preferredAngle?: 'hero-angle' | 'macro-crema' | 'highball-side';
 }
 
+/**
+ * Universal error handler for images that ensures images ALWAYS display
+ * even if local asset hashing or Vercel static routing fails.
+ */
+export function handleImageError(
+  event: React.SyntheticEvent<HTMLImageElement, Event>,
+  fallbackSrc?: string,
+  staticPath?: string
+) {
+  const img = event.currentTarget;
+  // Step 1: try the public static clean URL if not tried yet
+  if (staticPath && !img.dataset.triedStatic && img.src !== staticPath) {
+    img.dataset.triedStatic = 'true';
+    img.src = staticPath;
+    return;
+  }
+  // Step 2: try ultra-reliable high-res studio CDN fallback
+  if (fallbackSrc && img.src !== fallbackSrc) {
+    img.src = fallbackSrc;
+  }
+}
+
 const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   'daily-ritual': {
     src: espressoRitualImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/daily-ritual.jpg',
     alt: 'The Daily Ritual benchmark double espresso with golden hazelnut tiger-striped crema in matte ceramic cup',
     cameraAngle: '45° Elevated Macro',
     lightingSetup: 'Warm 3200K Key Light · Deep Slate Shadow · Directional Strobe',
@@ -66,6 +93,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'cortado': {
     src: cortadoGlassImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/cortado.jpg',
     alt: 'Artisanal Cortado in faceted glass tumbler with equal parts espresso and warm silky milk',
     cameraAngle: '45° Elevated Studio Angle',
     lightingSetup: 'Soft Natural Morning Light · Rustic Oak Surface · Draped Linen',
@@ -77,6 +106,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'flat-white': {
     src: flatWhiteRosettaImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/flat-white.jpg',
     alt: 'Velvet Flat White with intricate multi-leaf rosetta latte art on glossy microfoam in ceramic cup',
     cameraAngle: 'Overhead 90° Flatlay',
     lightingSetup: 'Diffused Softbox · Textured Linen Fabric · Warm Timber Table',
@@ -88,6 +119,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'cappuccino-cinnamon': {
     src: cappuccinoCinnamonImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/cappuccino-cinnamon.jpg',
     alt: 'Italian Cappuccino with a thick pillowy foam mountain dusted with cinnamon and cocoa in a dark ring',
     cameraAngle: 'Side Elevated 35° Perspective',
     lightingSetup: 'Warm Directional Sunlight · Ambient Espresso Bar Background',
@@ -99,6 +132,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'vienna-coffee': {
     src: viennaCreamImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/vienna-coffee.jpg',
     alt: 'Classic Vienna Coffee Einspänner with dark double espresso topped with tall cold whipped cream swirl and cocoa',
     cameraAngle: 'Profile Highball Hero',
     lightingSetup: 'Warm Golden Ambient Interior · Window Light · Antique Café Wood',
@@ -110,6 +145,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'clear-cut': {
     src: icedAmericanoImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/clear-cut.jpg',
     alt: 'The Clear Cut iced Americano in faceted crystal tumbler with hand-cut diamond ice cubes and light refraction',
     cameraAngle: 'Eye-Level Refraction Hero',
     lightingSetup: 'Backlit Rim Strobe · Crisp Condensation Reflection · Midnight Navy Surface',
@@ -121,6 +158,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'soft-landing': {
     src: softLandingImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/soft-landing.jpg',
     alt: 'The Soft Landing vanilla latte in rustic matte ceramic cup with delicate microfoam latte art',
     cameraAngle: '45° Warm Studio Hero',
     lightingSetup: 'Soft Diffused Morning Light · Warm Amber Glow · Textured Slate Table',
@@ -132,6 +171,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'golden-hour': {
     src: goldenHourImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/golden-hour.jpg',
     alt: 'Golden Hour iced caramel latte in tall fluted ribbed glass with caramel drip and warm backlighting',
     cameraAngle: 'Frontal Highball Showcase',
     lightingSetup: 'Warm Golden Hour Backlighting · Soft Rim Illumination · Polished Wood Bar',
@@ -143,6 +184,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'cocoa-cloud': {
     src: cocoaCloudImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/cocoa-cloud.jpg',
     alt: 'Cocoa Cloud chocolate coffee mocha in ceramic mug with whipped microfoam and Valrhona chocolate shavings',
     cameraAngle: 'Warm Café Close-Up',
     lightingSetup: 'Warm Ambient Interior · Soft 45° Key Light · Rustic Wood Counter',
@@ -154,6 +197,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'mint-condition': {
     src: mintColdBrewImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/mint-condition.jpg',
     alt: 'Mint Condition spearmint nitro cold brew with cascading coconut cream foam and garden mint sprig',
     cameraAngle: 'Vertical Cascade Profile',
     lightingSetup: 'Side Accent Strobe · Chilled Condensation Glow · Dark Oak Tasting Counter',
@@ -165,6 +210,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'velvet-orbit': {
     src: velvetOrbitImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1530373239216-42518e6b4063?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/velvet-orbit.jpg',
     alt: 'Velvet Orbit signature dark mocha with glossy chocolate swirl and dark plum moody atmosphere',
     cameraAngle: '35° Dramatic Studio Angle',
     lightingSetup: 'Dramatic Chiaroscuro · Deep Plum & Navy Gradient · Antique Wood Surface',
@@ -176,6 +223,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'wild-card': {
     src: wildCardImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/wild-card.jpg',
     alt: 'The Wild Card lavender cold brew with thick salted pistachio cream foam and dried lavender buds',
     cameraAngle: 'Frontal Mixology Showcase',
     lightingSetup: 'Warm Accent Lamp · Soft Rim Light · Bar Accessories Background',
@@ -187,6 +236,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'citrus-state': {
     src: citrusStateImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/citrus-state.jpg',
     alt: 'Citrus State sparkling botanical cooler with blood orange slice, rosemary sprig, and crystal ice',
     cameraAngle: 'Level Cocktail Hero',
     lightingSetup: 'Botanical Side Light · Sparkling Carbonation Highlights · Wet Slate Coaster',
@@ -198,6 +249,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'afterglow': {
     src: afterglowImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/afterglow.jpg',
     alt: 'Afterglow layered botanical mocktail with ruby hibiscus and violet butterfly pea tea in coupe glass',
     cameraAngle: 'Elegant Stemmed Coupe Elevation',
     lightingSetup: 'Soft Bokeh Strobe · Prismatic Ice Illumination · Dark Granite Bar',
@@ -209,6 +262,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'kyoto-cloud-matcha': {
     src: kyotoMatchaImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/kyoto-matcha.jpg',
     alt: 'Kyoto Cloud ceremonial matcha latte with jade green whisked froth and sea salt sweet cream',
     cameraAngle: '45° Japanese Tea Ceremony Modern',
     lightingSetup: 'Clean Studio Diffused Daylight · Natural Wood Coaster · Whisk Accents',
@@ -220,6 +275,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'cardamom-brioche': {
     src: cardamomBriocheImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/cardamom-brioche.jpg',
     alt: 'Cardamom Brioche Bun Swedish knot with pearl sugar on dark slate plate with morning light',
     cameraAngle: 'Top 35° Bakery Editorial',
     lightingSetup: 'Soft Morning Window Light · Natural Slate Table · Linen Cloth',
@@ -231,6 +288,8 @@ const STUDIO_COFFEE_IMAGE_REGISTRY: Record<string, StudioImageMetadata> = {
   },
   'truffle-brownie': {
     src: truffleBrownieImg,
+    fallbackSrc: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=1200&q=80',
+    staticPath: '/images/truffle-brownie.jpg',
     alt: 'Decadent 70% Guanaja chocolate truffle brownie with gooey fudgy center and flaky sea salt crystals',
     cameraAngle: 'Close-Up Food Macro',
     lightingSetup: 'Directional Low Strobe · Warm Timber Board · Molten Chocolate Highlight',
@@ -256,10 +315,12 @@ export function fetchCoffeeProductImage(
   }
 
   const isIced = typeof productOrId !== 'string' && productOrId.defaultTemp === 'iced';
-  const isMocha = typeof productOrId !== 'string' && productOrId.flavorTags.includes('chocolatey');
+  const isMocha = typeof productOrId !== 'string' && productOrId.flavorTags?.includes('chocolatey');
   const isMatcha = typeof productOrId !== 'string' && productOrId.category === 'Tea and Matcha';
 
   let fallbackSrc = softLandingImg;
+  let fallbackCdn = 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1200&q=80';
+  let staticPath = '/images/soft-landing.jpg';
   let glassware = 'Handcrafted Ceramic Mug';
   let cameraAngle = '45° Studio Hero';
   let dominantHex = '#2A1E17';
@@ -267,16 +328,22 @@ export function fetchCoffeeProductImage(
 
   if (isIced) {
     fallbackSrc = icedAmericanoImg;
+    fallbackCdn = 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=1200&q=80';
+    staticPath = '/images/clear-cut.jpg';
     glassware = 'Faceted Crystal Tumbler with Clear Ice';
     dominantHex = '#1E293B';
     accentHex = '#60A5FA';
   } else if (isMocha) {
     fallbackSrc = cocoaCloudImg;
+    fallbackCdn = 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=1200&q=80';
+    staticPath = '/images/cocoa-cloud.jpg';
     glassware = 'Earthenware Mug with Chocolate Dusting';
     dominantHex = '#3B1E12';
     accentHex = '#E6A85C';
   } else if (isMatcha) {
     fallbackSrc = kyotoMatchaImg;
+    fallbackCdn = 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=1200&q=80';
+    staticPath = '/images/kyoto-matcha.jpg';
     glassware = 'Ribbed Contemporary Japanese Glass';
     dominantHex = '#14532D';
     accentHex = '#86EFAC';
@@ -284,6 +351,8 @@ export function fetchCoffeeProductImage(
 
   return {
     src: fallbackSrc,
+    fallbackSrc: fallbackCdn,
+    staticPath,
     alt: `${productName} — Studio photographed specialty coffee (${productCategory})`,
     cameraAngle,
     lightingSetup: 'Warm 3200K Directional Strobe · Dark Slate Surface · Studio Rim Highlight',

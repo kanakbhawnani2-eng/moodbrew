@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Product, Order, LoyaltyRedemption } from '../types/cafe';
-import { fetchCoffeeProductImage } from '../services/imageService';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
 import { 
   X, 
   Sparkles, 
@@ -298,8 +298,8 @@ export const LoyaltyRewardsModal: React.FC<LoyaltyRewardsModalProps> = ({
                           src={studioImg.src}
                           alt={product.name}
                           className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
                           loading="lazy"
+                          onError={(e) => handleImageError(e, studioImg.fallbackSrc, studioImg.staticPath)}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-transparent to-transparent" />
 

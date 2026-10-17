@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Product } from '../types/cafe';
-import { fetchCoffeeProductImage, StudioImageMetadata } from '../services/imageService';
+import { fetchCoffeeProductImage, handleImageError, StudioImageMetadata } from '../services/imageService';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -414,8 +414,8 @@ export const CoffeeTypesGuide: React.FC<CoffeeTypesGuideProps> = ({
                   src={studioImage.src}
                   alt={studioImage.alt}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
                   loading="lazy"
+                  onError={(e) => handleImageError(e, studioImage.fallbackSrc, studioImage.staticPath)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-[#10172A]/20 to-transparent" />
 
@@ -573,7 +573,7 @@ export const CoffeeTypesGuide: React.FC<CoffeeTypesGuideProps> = ({
                 src={lightboxItem.studio.src}
                 alt={lightboxItem.studio.alt}
                 className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e, lightboxItem.studio.fallbackSrc, lightboxItem.studio.staticPath)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E293B] via-transparent to-transparent" />
               

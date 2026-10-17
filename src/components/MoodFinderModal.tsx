@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { MoodType, FlavorType, TempType, DietaryType, Product, CustomizationOption } from '../types/cafe';
-import { fetchCoffeeProductImage } from '../services/imageService';
-import { Sparkles, ArrowRight, ArrowLeft, RotateCcw, Check, ShoppingBag, Sliders, X, Flame, Snowflake, Heart, Camera } from 'lucide-react';
-import { ThreeDrinkCanvas } from './ThreeDrinkCanvas';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
+import { Sparkles, ArrowRight, ArrowLeft, RotateCcw, Check, ShoppingBag, Sliders, X, Flame, Snowflake, Heart, Camera, Eye } from 'lucide-react';
 
 interface MoodFinderModalProps {
   isOpen: boolean;
@@ -68,7 +67,6 @@ export const MoodFinderModal: React.FC<MoodFinderModalProps> = ({
   const [selectedSweetness, setSelectedSweetness] = useState('100% Standard');
   const [selectedExtras, setSelectedExtras] = useState<CustomizationOption[]>([]);
   const [addedAnimation, setAddedAnimation] = useState(false);
-  const [show3DPreview, setShow3DPreview] = useState(true);
 
   if (!isOpen) return null;
 
@@ -384,50 +382,46 @@ export const MoodFinderModal: React.FC<MoodFinderModalProps> = ({
           {step === 'result' && (
             <div className="space-y-8 animate-fadeIn">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* Visual Column: 3D Canvas / Photo Toggle */}
+                {/* Visual Column: Studio Coffee Photography */}
                 <div className="lg:col-span-5 flex flex-col">
-                  <div className="relative w-full h-[340px] rounded-xl overflow-hidden border border-white/10 bg-[#0B0F19]">
-                    {show3DPreview ? (
-                      <ThreeDrinkCanvas
-                        activeMood={answers.mood || 'comfort'}
-                        drinkType={selectedTemp}
-                        isInteractive={true}
-                        className="w-full h-full"
-                      />
-                    ) : (() => {
-                      const studioImg = fetchCoffeeProductImage(topMatch);
-                      return (
-                        <div className="relative w-full h-full">
-                          <img
-                            src={studioImg.src}
-                            alt={studioImg.alt}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#10172A]/80 via-transparent to-transparent" />
-                          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] text-[#F8F6F2] bg-[#10172A]/90 border border-white/10">
-                            <Camera className="w-3 h-3 text-[#E6A85C]" />
-                            <span className="font-mono text-[#B6BAC7]">{studioImg.cameraAngle}</span>
+                  {(() => {
+                    const studioImg = fetchCoffeeProductImage(topMatch);
+                    return (
+                      <div className="relative w-full h-[340px] rounded-2xl overflow-hidden border border-white/10 bg-[#0B0F19] shadow-xl group">
+                        <img
+                          src={studioImg.src}
+                          alt={studioImg.alt}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          onError={(e) => handleImageError(e, studioImg.fallbackSrc, studioImg.staticPath)}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-[#10172A]/20 to-transparent" />
+
+                        {/* Top Badges */}
+                        <div className="absolute top-3 left-3 z-10 px-2.5 py-1 text-xs text-[#10172A] bg-[#E6A85C] font-semibold rounded-md uppercase tracking-wider shadow">
+                          Match for {answers.mood || 'Your Mood'}
+                        </div>
+
+                        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] text-[#F8F6F2] bg-[#10172A]/85 border border-white/15">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#E6A85C]" />
+                          <span>Studio Photography</span>
+                        </div>
+
+                        {/* Bottom Studio Camera & Lighting metadata */}
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] text-[#F8F6F2] bg-[#10172A]/90 border border-white/10 backdrop-blur-sm max-w-[70%]">
+                            <Camera className="w-3 h-3 text-[#E6A85C] shrink-0" />
+                            <span className="font-mono text-[#B6BAC7] text-[9px] truncate">
+                              {studioImg.cameraAngle} · {studioImg.glassware}
+                            </span>
+                          </div>
+
+                          <div className="px-2.5 py-1 rounded-md text-xs font-mono font-semibold text-[#F8F6F2] bg-[#10172A]/90 border border-white/10 shrink-0">
+                            ${topMatch.price.toFixed(2)}
                           </div>
                         </div>
-                      );
-                    })()}
-
-                    {/* View Switcher button */}
-                    <div className="absolute top-3 right-3 z-20">
-                      <button
-                        onClick={() => setShow3DPreview(!show3DPreview)}
-                        className="px-2.5 py-1 text-xs text-[#F8F6F2] bg-[#10172A]/80 hover:bg-[#1E293B] border border-white/20 rounded-md transition-colors"
-                      >
-                        {show3DPreview ? 'View Studio Photo' : 'Interactive 3D'}
-                      </button>
-                    </div>
-
-                    {/* Mood tag badge */}
-                    <div className="absolute top-3 left-3 z-20 px-2.5 py-1 text-xs text-[#10172A] bg-[#E6A85C] font-semibold rounded-md uppercase tracking-wider">
-                      Match for {answers.mood || 'Your Mood'}
-                    </div>
-                  </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Tasting Notes */}
                   <div className="mt-3 p-3 bg-white/5 rounded-xl border border-white/5">
@@ -657,7 +651,10 @@ export const MoodFinderModal: React.FC<MoodFinderModalProps> = ({
                             src={alt.image}
                             alt={alt.name}
                             className="w-12 h-12 rounded-lg object-cover shrink-0"
-                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const meta = fetchCoffeeProductImage(alt);
+                              handleImageError(e, meta.fallbackSrc, meta.staticPath);
+                            }}
                           />
                           <div>
                             <h4 className="text-xs font-semibold text-[#F8F6F2]">{alt.name}</h4>

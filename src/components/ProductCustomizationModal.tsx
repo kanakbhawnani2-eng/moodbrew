@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product, CustomizationOption } from '../types/cafe';
-import { fetchCoffeeProductImage } from '../services/imageService';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
 import { X, Check, Flame, Snowflake, Plus, Minus, ShoppingBag, Camera } from 'lucide-react';
 
 interface ProductCustomizationModalProps {
@@ -82,7 +82,7 @@ export const ProductCustomizationModal: React.FC<ProductCustomizationModalProps>
                 src={studioImage.src}
                 alt={studioImage.alt}
                 className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e, studioImage.fallbackSrc, studioImage.staticPath)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-[#10172A]/40 to-transparent" />
 

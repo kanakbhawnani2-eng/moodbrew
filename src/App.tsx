@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Product, MoodType, CartItem, Order, OrderStatus, CustomizationOption, LoyaltyRedemption } from './types/cafe';
 import { INITIAL_PRODUCTS, cafeAmbianceImg } from './data/menuData';
-import { fetchCoffeeProductImage } from './services/imageService';
-import { ThreeDrinkCanvas } from './components/ThreeDrinkCanvas';
+import { fetchCoffeeProductImage, handleImageError } from './services/imageService';
 import { MoodFinderModal } from './components/MoodFinderModal';
 import { ProductCustomizationModal } from './components/ProductCustomizationModal';
 import { CartDrawer } from './components/CartDrawer';
@@ -78,9 +77,40 @@ export default function App() {
   const [isLoyaltyOpen, setIsLoyaltyOpen] = useState(false);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
 
-  // Active mood in the 3D Hero
+  // Active showcase coffee & mood in the Studio Photography Hero (No 3D)
   const [heroMood, setHeroMood] = useState<MoodType>('comfort');
-  const [heroTemp, setHeroTemp] = useState<'hot' | 'iced'>('iced');
+  const [heroTemp, setHeroTemp] = useState<'hot' | 'iced'>('hot');
+  const [heroDrinkId, setHeroDrinkId] = useState<string>('soft-landing');
+
+  // Dynamic mapping of moods and temperatures to specialty coffees
+  const MOOD_COFFEE_MAP: Record<MoodType, { hot: string; iced: string }> = {
+    comfort: { hot: 'soft-landing', iced: 'flat-white' },
+    focus: { hot: 'daily-ritual', iced: 'clear-cut' },
+    adventure: { hot: 'wild-card', iced: 'velvet-orbit' },
+    celebration: { hot: 'vienna-coffee', iced: 'golden-hour' },
+    refresh: { hot: 'cortado', iced: 'citrus-state' },
+    treat: { hot: 'cappuccino-cinnamon', iced: 'cocoa-cloud' },
+  };
+
+  const handleHeroMoodSelect = (m: MoodType) => {
+    setHeroMood(m);
+    const targetDrinkId = MOOD_COFFEE_MAP[m]?.[heroTemp] || MOOD_COFFEE_MAP[m]?.hot || 'soft-landing';
+    setHeroDrinkId(targetDrinkId);
+  };
+
+  const handleHeroTempToggle = (t: 'hot' | 'iced') => {
+    setHeroTemp(t);
+    const targetDrinkId = MOOD_COFFEE_MAP[heroMood]?.[t] || heroDrinkId;
+    setHeroDrinkId(targetDrinkId);
+  };
+
+  const handleHeroDrinkSelect = (drink: Product) => {
+    setHeroDrinkId(drink.id);
+    if (drink.moodTags && drink.moodTags[0]) {
+      setHeroMood(drink.moodTags[0]);
+    }
+    setHeroTemp(drink.defaultTemp);
+  };
 
   // Points tracking calculations
   const welcomeBonusPoints = 90;
@@ -247,7 +277,16 @@ export default function App() {
 
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Featured 4 drinks for hero showcase
+  // Active hero product and studio photo (No 3D)
+  const activeHeroDrink = products.find(p => p.id === heroDrinkId) || products[0];
+  const activeHeroImage = fetchCoffeeProductImage(activeHeroDrink);
+
+  // Featured hero thumbnail coffees for direct studio browsing
+  const heroCuratedDrinks = products.filter(p => 
+    ['soft-landing', 'daily-ritual', 'golden-hour', 'citrus-state', 'velvet-orbit', 'cortado', 'vienna-coffee', 'cocoa-cloud'].includes(p.id)
+  );
+
+  // Featured 4 drinks for signature showcase section below
   const featuredDrinks = products.filter(p => 
     ['soft-landing', 'golden-hour', 'citrus-state', 'velvet-orbit'].includes(p.id)
   );
@@ -383,21 +422,26 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Mood Switcher Pills for live 3D preview */}
+                {/* Mood Switcher Pills for live coffee image showcase */}
                 <div className="pt-6 border-t border-white/10">
-                  <span className="text-[11px] uppercase tracking-wider text-[#B6BAC7] block mb-2 font-medium">
-                    Test the mood spectrum:
-                  </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] uppercase tracking-wider text-[#B6BAC7] font-medium">
+                      Select your mood to explore coffee imagery:
+                    </span>
+                    <span className="text-[10px] text-[#E6A85C] font-mono">
+                      Studio Photography
+                    </span>
+                  </div>
                   <div className="flex flex-wrap gap-2 text-xs">
-                    {(['comfort', 'focus', 'adventure', 'celebration', 'refresh'] as MoodType[]).map((m) => {
+                    {(['comfort', 'focus', 'adventure', 'celebration', 'refresh', 'treat'] as MoodType[]).map((m) => {
                       const isActive = heroMood === m;
                       return (
                         <button
                           key={m}
-                          onClick={() => setHeroMood(m)}
+                          onClick={() => handleHeroMoodSelect(m)}
                           className={`capitalize px-3 py-1.5 rounded-lg border transition-all ${
                             isActive
-                              ? 'border-[#E6A85C] bg-[#E6A85C]/15 text-[#E6A85C] font-semibold'
+                              ? 'border-[#E6A85C] bg-[#E6A85C]/15 text-[#E6A85C] font-semibold shadow-sm'
                               : 'border-white/10 text-[#B6BAC7] hover:text-[#F8F6F2] hover:bg-white/5'
                           }`}
                         >
@@ -409,46 +453,151 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Right Column: 3D Scene Viewport */}
+              {/* Right Column: High-Quality Studio Coffee Photography Showcase (No 3D) */}
               <div className="lg:col-span-6 flex flex-col items-center">
-                <div className="relative w-full h-[440px] sm:h-[500px] rounded-3xl border border-white/10 bg-[#0E1526]/80 shadow-2xl overflow-hidden">
-                  <ThreeDrinkCanvas
-                    activeMood={heroMood}
-                    drinkType={heroTemp}
-                    onMoodChange={(m) => setHeroMood(m)}
-                    className="w-full h-full"
-                  />
+                <div className="relative w-full rounded-3xl border border-white/10 bg-[#0E1526]/90 shadow-2xl overflow-hidden group">
+                  {/* Studio Image Container */}
+                  <div className="relative aspect-[4/3] sm:aspect-[16/11] w-full overflow-hidden bg-[#0A0E17]">
+                    <img
+                      key={`${activeHeroDrink.id}-${heroTemp}`}
+                      src={activeHeroImage.src}
+                      alt={activeHeroImage.alt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      onError={(e) => handleImageError(e, activeHeroImage.fallbackSrc, activeHeroImage.staticPath)}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0E1526] via-[#0E1526]/20 to-transparent pointer-events-none" />
 
-                  {/* Temperature Switch floating top-left */}
-                  <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 bg-[#10172A]/85 border border-white/10 rounded-lg">
-                    <button
-                      onClick={() => setHeroTemp('iced')}
-                      className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-colors ${
-                        heroTemp === 'iced'
-                          ? 'bg-[#60A5FA] text-[#10172A] font-semibold'
-                          : 'text-[#B6BAC7] hover:text-[#F8F6F2]'
-                      }`}
-                    >
-                      <Snowflake className="w-3 h-3" />
-                      <span>Iced</span>
-                    </button>
-                    <button
-                      onClick={() => setHeroTemp('hot')}
-                      className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded transition-colors ${
-                        heroTemp === 'hot'
-                          ? 'bg-[#E6A85C] text-[#10172A] font-semibold'
-                          : 'text-[#B6BAC7] hover:text-[#F8F6F2]'
-                      }`}
-                    >
-                      <Flame className="w-3 h-3" />
-                      <span>Hot</span>
-                    </button>
+                    {/* Top Row: Temperature Selector & Studio Badge */}
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-1 p-1 bg-[#10172A]/90 border border-white/10 rounded-xl backdrop-blur-md">
+                      <button
+                        onClick={() => handleHeroTempToggle('hot')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
+                          heroTemp === 'hot'
+                            ? 'bg-[#E6A85C] text-[#10172A] font-semibold shadow-sm'
+                            : 'text-[#B6BAC7] hover:text-[#F8F6F2]'
+                        }`}
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>Hot</span>
+                      </button>
+                      <button
+                        onClick={() => handleHeroTempToggle('iced')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
+                          heroTemp === 'iced'
+                            ? 'bg-[#60A5FA] text-[#10172A] font-semibold shadow-sm'
+                            : 'text-[#B6BAC7] hover:text-[#F8F6F2]'
+                        }`}
+                      >
+                        <Snowflake className="w-3.5 h-3.5" />
+                        <span>Iced</span>
+                      </button>
+                    </div>
+
+                    {/* Top Right: Studio Photography Tag */}
+                    <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 text-[11px] text-[#F8F6F2] bg-[#10172A]/90 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+                      <Camera className="w-3.5 h-3.5 text-[#E6A85C]" />
+                      <span className="capitalize">{heroMood} Mood · Studio Shot</span>
+                    </div>
+
+                    {/* Bottom Overlay on Image: Camera Angle & Price */}
+                    <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#10172A]/90 border border-white/10 backdrop-blur-md max-w-[70%]">
+                        <span className="text-[#E6A85C] font-mono text-[10px] font-semibold uppercase">Spec:</span>
+                        <span className="text-[#B6BAC7] font-mono text-[10px] truncate">
+                          {activeHeroImage.cameraAngle} · {activeHeroImage.glassware}
+                        </span>
+                      </div>
+
+                      <div className="px-3 py-1 bg-[#10172A]/90 border border-white/10 rounded-lg font-mono font-bold text-sm text-[#E6A85C] shadow-sm">
+                        ${activeHeroDrink.price.toFixed(2)}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Active mood indicator top right */}
-                  <div className="absolute top-4 right-4 z-20 text-[11px] text-[#B6BAC7] bg-[#10172A]/85 px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E6A85C]" />
-                    <span className="capitalize">{heroMood} Ambiance</span>
+                  {/* Drink Editorial Card & Actions */}
+                  <div className="p-5 sm:p-6 bg-[#0E1526] space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#E6A85C] font-semibold">
+                          <span>{activeHeroDrink.category}</span>
+                          <span>·</span>
+                          <span className="capitalize">{activeHeroDrink.caffeineLevel} Caffeine</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-serif text-[#F8F6F2] mt-0.5 font-normal">
+                          {activeHeroDrink.name}
+                        </h3>
+                        <p className="text-xs text-[#B6BAC7] mt-1 line-clamp-2 leading-relaxed">
+                          {activeHeroDrink.description}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 sm:self-center shrink-0">
+                        <button
+                          onClick={() => handleQuickAdd(activeHeroDrink)}
+                          className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-[#F8F6F2] text-xs font-semibold border border-white/15 transition-all flex items-center gap-1.5"
+                          title="Quick add to tray"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 text-[#E6A85C]" />
+                          <span>+ Tray</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedProductForModal(activeHeroDrink)}
+                          className="px-4 py-2.5 rounded-xl bg-[#E6A85C] hover:bg-[#d49344] text-[#10172A] text-xs font-semibold transition-all shadow-md flex items-center gap-1.5"
+                        >
+                          <span>Customise</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Tasting Notes */}
+                    <div className="pt-3 border-t border-white/5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                      <span className="text-[#B6BAC7] mr-1">Notes:</span>
+                      {activeHeroDrink.flavorNotes.map((note, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[#B6BAC7]">
+                          {note}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Thumbnail Selector Bar for Instant Coffee Exploration */}
+                    <div className="pt-3 border-t border-white/5">
+                      <span className="text-[10px] uppercase tracking-wider text-[#B6BAC7] block mb-2 font-medium">
+                        Explore Studio Coffee Photography:
+                      </span>
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                        {heroCuratedDrinks.map((coffee) => {
+                          const isSelected = coffee.id === heroDrinkId;
+                          const thumbImg = fetchCoffeeProductImage(coffee);
+                          return (
+                            <button
+                              key={coffee.id}
+                              onClick={() => handleHeroDrinkSelect(coffee)}
+                              className={`group/thumb flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-left shrink-0 transition-all ${
+                                isSelected
+                                  ? 'border-[#E6A85C] bg-[#E6A85C]/15 text-[#F8F6F2]'
+                                  : 'border-white/10 bg-white/5 text-[#B6BAC7] hover:border-white/20 hover:text-[#F8F6F2]'
+                              }`}
+                            >
+                              <img
+                                src={thumbImg.src}
+                                alt={coffee.name}
+                                className="w-7 h-7 rounded-lg object-cover shrink-0 border border-white/10"
+                                onError={(e) => handleImageError(e, thumbImg.fallbackSrc, thumbImg.staticPath)}
+                              />
+                              <div className="text-[11px] pr-1">
+                                <span className="font-serif block leading-tight font-medium">
+                                  {coffee.name}
+                                </span>
+                                <span className="text-[9px] text-[#E6A85C] capitalize block">
+                                  {coffee.moodTags[0]}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -482,7 +631,10 @@ export default function App() {
                     src={drink.image}
                     alt={drink.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const meta = fetchCoffeeProductImage(drink);
+                      handleImageError(e, meta.fallbackSrc, meta.staticPath);
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#10172A]/90 via-transparent to-transparent" />
                   
@@ -679,8 +831,8 @@ export default function App() {
                       src={studioImg.src}
                       alt={studioImg.alt}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
                       loading="lazy"
+                      onError={(e) => handleImageError(e, studioImg.fallbackSrc, studioImg.staticPath)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-[#10172A]/20 to-transparent" />
 
@@ -797,7 +949,7 @@ export default function App() {
                 src={cafeAmbianceImg}
                 alt="The Mood Menu Café Interior"
                 className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
+                onError={(e) => handleImageError(e, 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1600&q=80', '/images/cafe-ambiance.jpg')}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#10172A] via-transparent to-transparent opacity-60" />
             </div>

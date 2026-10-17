@@ -1,5 +1,6 @@
 import React from 'react';
 import { CartItem } from '../types/cafe';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
 import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Clock, Award, Sparkles } from 'lucide-react';
 
 interface CartDrawerProps {
@@ -103,7 +104,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     src={item.product.image}
                     alt={item.product.name}
                     className="w-16 h-16 rounded-lg object-cover shrink-0 border border-white/10"
-                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const meta = fetchCoffeeProductImage(item.product);
+                      handleImageError(e, meta.fallbackSrc, meta.staticPath);
+                    }}
                   />
 
                   <div className="flex-1 min-w-0">

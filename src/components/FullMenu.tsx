@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, CategoryType, MoodType } from '../types/cafe';
-import { fetchCoffeeProductImage } from '../services/imageService';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
 import { Search, SlidersHorizontal, Flame, Snowflake, Sparkles, Plus, Check } from 'lucide-react';
 
 interface FullMenuProps {
@@ -248,8 +248,8 @@ export const FullMenu: React.FC<FullMenuProps> = ({
                     src={studioImage.src}
                     alt={studioImage.alt}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
                     loading="lazy"
+                    onError={(e) => handleImageError(e, studioImage.fallbackSrc, studioImage.staticPath)}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#10172A]/85 via-transparent to-transparent" />
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Product, Order, OrderStatus } from '../types/cafe';
+import { fetchCoffeeProductImage, handleImageError } from '../services/imageService';
 import { X, Check, Edit3, Eye, EyeOff, Coffee, Clock, DollarSign, Package } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -185,7 +186,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       src={prod.image}
                       alt={prod.name}
                       className="w-10 h-10 rounded-lg object-cover shrink-0"
-                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const meta = fetchCoffeeProductImage(prod);
+                        handleImageError(e, meta.fallbackSrc, meta.staticPath);
+                      }}
                     />
                     <div className="min-w-0">
                       <h4 className="text-xs font-semibold text-[#F8F6F2] truncate">{prod.name}</h4>
